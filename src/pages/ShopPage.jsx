@@ -20,14 +20,25 @@ export default function ShopPage({ products, loading, onAddToCart, cartLoading, 
           font-weight: 300; letter-spacing: 0.02em; margin-bottom: 8px;
         }
         .shop-sub { font-size: 14px; color: var(--muted); }
+        .shop-filters-wrap {
+          position: relative; margin-bottom: 40px;
+        }
         .shop-filters {
-          display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 48px;
+          display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px;
+          scrollbar-width: none; -ms-overflow-style: none;
+          scroll-behavior: smooth;
+        }
+        .shop-filters::-webkit-scrollbar { display: none; }
+        .shop-filters-fade-right {
+          position: absolute; right: 0; top: 0; bottom: 2px;
+          width: 60px; pointer-events: none;
+          background: linear-gradient(to right, transparent, var(--white));
         }
         .filter-btn {
           padding: 8px 20px; border: 1px solid var(--border);
           background: none; font-size: 11px; letter-spacing: 0.12em;
           text-transform: uppercase; cursor: pointer; transition: all 0.2s;
-          color: var(--muted);
+          color: var(--muted); white-space: nowrap; flex-shrink: 0;
         }
         .filter-btn.active, .filter-btn:hover {
           border-color: var(--ink); background: var(--ink); color: white;
@@ -88,14 +99,17 @@ export default function ShopPage({ products, loading, onAddToCart, cartLoading, 
             <p className="shop-sub">Science-backed formulas for every skin concern</p>
           </div>
 
-          <div className="shop-filters">
-            {allTags.map(tag => (
-              <button key={tag}
-                className={`filter-btn ${activeTag===tag?'active':''}`}
-                onClick={() => setActiveTag(tag)}>
-                {tag}
-              </button>
-            ))}
+          <div className="shop-filters-wrap">
+            <div className="shop-filters">
+              {allTags.map(tag => (
+                <button key={tag}
+                  className={`filter-btn ${activeTag===tag?'active':''}`}
+                  onClick={() => setActiveTag(tag)}>
+                  {tag}
+                </button>
+              ))}
+            </div>
+            <div className="shop-filters-fade-right"/>
           </div>
 
           <div className="shop-count">{filtered.length} products</div>
