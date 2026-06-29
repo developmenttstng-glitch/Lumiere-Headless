@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom'
 import Navbar          from './components/Navbar'
 import Footer          from './components/Footer'
 import CartDrawer      from './components/CartDrawer'
@@ -45,32 +46,52 @@ function LoginPage({ onLogin, error }) {
   )
 }
 
-function getInitialPage() {
-  const path   = window.location.pathname
-  const search = window.location.search
-  const hasToken    = !!localStorage.getItem('lumiere_token')
-  const hasCustomer = !!localStorage.getItem('lumiere_customer')
+function ProductRoute({ onAddToCart, cartLoading }) {
+  const { handle } = useParams()
+  const navigate   = useNavigate()
+  const { products } = useProducts(20)
+  const product = products.find(p => p.handle === handle)
 
-  if (path.includes('/account/callback') && search.includes('code=') && search.includes('state=')) {
-    if (hasToken && hasCustomer) { window.history.replaceState({},'',' /'); return 'account' }
-    return 'callback'
+  if (!product && products.length > 0) {
+    navigate('/shop')
+    return null
   }
-  if (search.includes('account=1')) {
-    window.history.replaceState({}, '', '/')
-    return 'account'
-  }
-  return 'home'
+
+  return (
+    <ProductPage
+      product={product}
+      onAddToCart={onAddToCart}
+      cartLoading={cartLoading}
+      onBack={() => navigate(-1)}
+    />
+  )
+}
+
+function CollectionRoute({ onAddToCart, cartLoading, onViewProduct }) {
+  const { handle } = useParams()
+  const navigate   = useNavigate()
+  return (
+    <CollectionsPage
+      collections={[]}
+      activeCollection={handle}
+      onNav={(p, extra) => {
+        if (p === 'collection') navigate(`/collections/${extra}`)
+        else navigate(p === 'home' ? '/' : `/${p}`)
+      }}
+      onAddToCart={onAddToCart}
+      cartLoading={cartLoading}
+      onViewProduct={onViewProduct}
+    />
+  )
 }
 
 export default function App() {
-  const [page,             setPage]             = useState(getInitialPage)
-  const [activeCollection, setActiveCollection]  = useState(null)
-  const [activeProduct,    setActiveProduct]     = useState(null)
-  const [prevPage,         setPrevPage]          = useState('home')
-  const [cartOpen,         setCartOpen]          = useState(false)
+  const navigate  = useNavigate()
+  const location  = useLocation()
+  const [cartOpen, setCartOpen] = useState(false)
 
-  const { products, loading: productsLoading }    = useProducts(20)
-  const { collections }                           = useCollections()
+  const { products, loading: productsLoading } = useProducts(20)
+  const { collections }                         = useCollections()
   const {
     lines, totalItems, totalPrice, currency, loading: cartLoading,
     addToCart, updateQuantity, removeLine, goToCheckout
@@ -80,92 +101,83 @@ export default function App() {
     login, logout, handleCallback, fetchOrders
   } = useCustomer()
 
-  // Expose viewProduct globally for search results
   useEffect(() => {
-    window._lumiereViewProduct = viewProduct
-    return () => { delete window._lumiereViewProduct }
-  }, [page])
+    window.scrollTo({ top:0, behavior:'smooth' })
+  }, [location.pathname])
 
-  useEffect(() => {
-    if (page !== 'product') window.scrollTo({ top: 0, behavior: 'smooth' })
-    else window.scrollTo({ top: 0 })
-  }, [page, activeProduct])
-
-  function navigate(p, extra) {
-    if (p === 'collection') {
-      setActiveCollection(extra)
-      setPage('collections')
-    } else {
-      setPage(p)
-      setActiveCollection(null)
-    }
+  function nav(p, extra) {
+    if (p === 'collection') navigate(`/collections/${extra}`)
+    else if (p === 'home')  navigate('/')
+    else                    navigate(`/${p}`)
   }
 
   function viewProduct(product) {
-    setPrevPage(page)
-    setActiveProduct(product)
-    setPage('product')
+    navigate(`/products/${product.handle}`)
   }
 
-  function goBack() {
-    setPage(prevPage)
-    setActiveProduct(null)
-  }
-
-  const sharedProps = {
-    onAddToCart:   addToCart,
-    cartLoading,
-    onViewProduct: viewProduct,
-  }
-
-  function renderPage() {
-    switch(page) {
-      case 'home': return (
-        <HomePage products={products} collections={collections}
-          loading={productsLoading} onNav={navigate} {...sharedProps}/>
-      )
-      case 'shop': return (
-        <ShopPage products={products} loading={productsLoading} {...sharedProps}/>
-      )
-      case 'collections': return (
-        <CollectionsPage collections={collections} activeCollection={activeCollection}
-          onNav={navigate} {...sharedProps}/>
-      )
-      case 'product': return (
-        <ProductPage product={activeProduct} onAddToCart={addToCart}
-          cartLoading={cartLoading} onBack={goBack}/>
-      )
-      case 'about': return <AboutPage onNav={navigate}/>
-      case 'callback': return <CallbackPage handleCallback={handleCallback}/>
-      case 'account': {
-        const c = customer || (() => { try { return JSON.parse(localStorage.getItem('lumiere_customer')) } catch { return null } })()
-        const t = localStorage.getItem('lumiere_token')
-        return c && t
-          ? <AccountPage customer={c} onLogout={() => { logout(); navigate('home') }} fetchOrders={fetchOrders} onNav={navigate}/>
-          : <LoginPage onLogin={login} error={authError}/>
-      }
-      default: return (
-        <HomePage products={products} collections={collections}
-          loading={productsLoading} onNav={navigate} {...sharedProps}/>
-      )
-    }
-  }
+  const shared = { onAddToCart:addToCart, cartLoading, onViewProduct:viewProduct }
+  const isCallback = location.pathname.includes('/account/callback')
 
   return (
     <div>
       <Navbar
-        page={page}
-        onNav={navigate}
+        page={location.pathname}
+        onNav={nav}
         totalItems={totalItems}
         onCartOpen={() => setCartOpen(true)}
         customer={customer}
         onLogin={login}
-        onAccount={() => navigate('account')}
+        onAccount={() => navigate('/account')}
       />
 
-      <main>{renderPage()}</main>
+      <main>
+        <Routes>
+          <Route path="/" element={
+            <HomePage products={products} collections={collections}
+              loading={productsLoading} onNav={nav} {...shared}/>
+          }/>
 
-      {page !== 'callback' && <Footer onNav={navigate}/>}
+          <Route path="/shop" element={
+            <ShopPage products={products} loading={productsLoading} {...shared}/>
+          }/>
+
+          <Route path="/collections" element={
+            <CollectionsPage collections={collections} activeCollection={null}
+              onNav={nav} {...shared}/>
+          }/>
+
+          <Route path="/collections/:handle" element={
+            <CollectionRoute {...shared}/>
+          }/>
+
+          <Route path="/products/:handle" element={
+            <ProductRoute onAddToCart={addToCart} cartLoading={cartLoading}/>
+          }/>
+
+          <Route path="/about" element={<AboutPage onNav={nav}/>}/>
+
+          <Route path="/account/callback" element={
+            <CallbackPage handleCallback={handleCallback}/>
+          }/>
+
+          <Route path="/account" element={
+            (() => {
+              const c = customer || (() => { try { return JSON.parse(localStorage.getItem('lumiere_customer')) } catch { return null } })()
+              const t = localStorage.getItem('lumiere_token')
+              return c && t
+                ? <AccountPage customer={c} onLogout={() => { logout(); navigate('/') }} fetchOrders={fetchOrders} onNav={nav}/>
+                : <LoginPage onLogin={login} error={authError}/>
+            })()
+          }/>
+
+          <Route path="*" element={
+            <HomePage products={products} collections={collections}
+              loading={productsLoading} onNav={nav} {...shared}/>
+          }/>
+        </Routes>
+      </main>
+
+      {!isCallback && <Footer onNav={nav}/>}
 
       {cartOpen && (
         <CartDrawer

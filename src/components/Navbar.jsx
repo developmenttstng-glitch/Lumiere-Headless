@@ -46,10 +46,10 @@ export default function Navbar({ page, onNav, totalItems, onCartOpen, customer, 
   }
 
   const links = [
-    { id:'home',        label:'Home' },
-    { id:'collections', label:'Collections' },
-    { id:'shop',        label:'Shop' },
-    { id:'about',       label:'About' },
+    { id:'home',        path:'/',            label:'Home' },
+    { id:'collections', path:'/collections', label:'Collections' },
+    { id:'shop',        path:'/shop',        label:'Shop' },
+    { id:'about',       path:'/about',       label:'About' },
   ]
 
   return (
