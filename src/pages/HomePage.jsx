@@ -434,9 +434,11 @@ export default function HomePage({ products, collections, loading, onNav, onAddT
           <div className="editorial-grid">
             <RevealSection>
               <div className="editorial-img">
-                <div style={{width:'100%',height:'100%',background:'linear-gradient(135deg,var(--cream),var(--gold-lt))',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                  <span style={{fontFamily:'var(--serif)',fontSize:'80px',color:'rgba(201,169,110,0.3)'}}>L</span>
-                </div>
+                <img
+                  src="https://cdn.shopify.com/s/files/1/0816/5854/4352/files/lumi-re-our-philosophy_cd742ea7-49ad-4f39-a0d2-185a7f2f1fae.png?v=1782704372"
+                  alt="LUMIÈRE Philosophy"
+                  style={{width:'100%',height:'100%',objectFit:'cover',objectPosition:'center'}}
+                />
               </div>
             </RevealSection>
             <RevealSection delay={0.2}>
