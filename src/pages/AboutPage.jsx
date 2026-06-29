@@ -102,9 +102,11 @@ export default function AboutPage({ onNav }) {
           <div className="container">
             <div className="about-grid">
               <div className="about-img">
-                <div className="about-img-placeholder">
-                  <span style={{fontFamily:'var(--serif)',fontSize:96,color:'rgba(201,169,110,0.25)'}}>L</span>
-                </div>
+                <img
+                  src="https://cdn.shopify.com/s/files/1/0816/5854/4352/files/lumi-re-our-beginning_9ad07ad5-5a30-4b25-985a-df7e61a0ab7a.png?v=1782704371"
+                  alt="LUMIÈRE — Our Beginning"
+                  style={{width:'100%',height:'100%',objectFit:'cover',objectPosition:'center'}}
+                />
               </div>
               <div>
                 <div className="about-content-eyebrow">The Beginning</div>
