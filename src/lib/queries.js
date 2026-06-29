@@ -115,3 +115,20 @@ export const REMOVE_CART_LINES = `
     }
   }
 `
+
+export const SEARCH_PRODUCTS = `
+  query SearchProducts($query: String!, $country: CountryCode!) @inContext(country: $country) {
+    products(first: 20, query: $query) {
+      edges {
+        node {
+          id title handle description
+          priceRange { minVariantPrice { amount currencyCode } }
+          featuredImage { url altText }
+          variants(first: 1) {
+            edges { node { id availableForSale } }
+          }
+        }
+      }
+    }
+  }
+`
